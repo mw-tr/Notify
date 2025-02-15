@@ -1,4 +1,11 @@
+
+
 local ModernNotifications = {}
+local VERSION = 1.2
+
+function ModernNotifications.GetVersion()
+	return VERSION
+end
 local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 
@@ -12,7 +19,7 @@ notificationGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local notificationTemplate = Instance.new("Frame")
 notificationTemplate.Name = "Notification"
-notificationTemplate.BackgroundColor3 = Color3.fromRGB(40, 40, 40)  -- Dark grey
+notificationTemplate.BackgroundColor3 = Color3.fromRGB(40, 40, 40) 
 notificationTemplate.Size = UDim2.new(0, 300, 0, 80)
 notificationTemplate.Position = UDim2.new(1, 10, 1, -90)
 notificationTemplate.AnchorPoint = Vector2.new(1, 1)
@@ -132,6 +139,7 @@ local function showNotification(titleText, messageText, duration)
 	task.wait(duration)
 	hide()
 end
+
 function ModernNotifications.Show(title, message, duration)
 	showNotification(title, message, duration or 5)
 end
