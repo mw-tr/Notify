@@ -1,0 +1,139 @@
+local ModernNotifications = {}
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+
+-- Create custom notification GUI
+local notificationGui = Instance.new("ScreenGui")
+notificationGui.Name = "CustomNotifications"
+notificationGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local notificationTemplate = Instance.new("Frame")
+notificationTemplate.Name = "Notification"
+notificationTemplate.BackgroundColor3 = Color3.fromRGB(40, 40, 40)  -- Dark grey
+notificationTemplate.Size = UDim2.new(0, 300, 0, 80)
+notificationTemplate.Position = UDim2.new(1, 10, 1, -90)
+notificationTemplate.AnchorPoint = Vector2.new(1, 1)
+notificationTemplate.Visible = false
+
+-- Add styling elements
+local uiCorner = Instance.new("UICorner")
+uiCorner.CornerRadius = UDim.new(0, 8)
+uiCorner.Parent = notificationTemplate
+
+local uiStroke = Instance.new("UIStroke")
+uiStroke.Color = Color3.fromRGB(100, 100, 100)  -- Medium grey
+uiStroke.Thickness = 2
+uiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+uiStroke.Parent = notificationTemplate
+
+-- Add content hierarchy
+local textContainer = Instance.new("Frame")
+textContainer.Name = "TextContainer"
+textContainer.BackgroundTransparency = 1
+textContainer.Size = UDim2.new(1, -70, 1, 0)
+textContainer.Position = UDim2.new(0, 60, 0, 0)
+textContainer.Parent = notificationTemplate
+
+local title = Instance.new("TextLabel")
+title.Name = "Title"
+title.Font = Enum.Font.GothamBold
+title.TextColor3 = Color3.new(1, 1, 1)
+title.BackgroundTransparency = 1  -- Transparent background
+title.TextSize = 18
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Size = UDim2.new(1, 0, 0.5, 0)
+title.Position = UDim2.new(0, 0, 0, 5)
+title.Parent = textContainer
+
+local message = Instance.new("TextLabel")
+message.Name = "Message"
+message.Font = Enum.Font.Gotham
+message.TextColor3 = Color3.new(0.8, 0.8, 0.8)
+message.BackgroundTransparency = 1  -- Transparent background
+message.TextSize = 14
+message.TextXAlignment = Enum.TextXAlignment.Left
+message.Size = UDim2.new(1, 0, 0.5, 0)
+message.Position = UDim2.new(0, 0, 0.5, -5)
+message.Parent = textContainer
+
+-- Progress bar
+local progressBar = Instance.new("Frame")
+progressBar.Name = "ProgressBar"
+progressBar.BackgroundColor3 = Color3.fromRGB(66, 108, 204)  
+progressBar.Size = UDim2.new(1, 0, 0, 4)
+progressBar.Position = UDim2.new(0, 0, 1, -4)
+progressBar.AnchorPoint = Vector2.new(0, 1)
+progressBar.Parent = notificationTemplate
+
+local progressCorner = Instance.new("UICorner")
+progressCorner.CornerRadius = UDim.new(0, 2)
+progressCorner.Parent = progressBar
+
+notificationTemplate.Parent = notificationGui
+notificationGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- Pool of notifications for reuse
+local notificationPool = {}
+
+local function showNotification(titleText, messageText, duration)
+	-- Try to reuse a notification from the pool
+	local notification = table.remove(notificationPool) or notificationTemplate:Clone()
+	notification.Visible = true
+	notification.Parent = notificationGui
+
+	-- Set content
+	notification.TextContainer.Title.Text = titleText
+	notification.TextContainer.Message.Text = messageText
+
+	-- Smoother entrance animation with scale effect
+	notification.Position = UDim2.new(1, 10, 1, -90)
+	notification.Size = UDim2.new(0, 300, 0, 0)
+
+	local slideIn = TweenService:Create(
+		notification,
+		TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+		{
+			Position = UDim2.new(1, -10, 1, -90),
+			Size = UDim2.new(0, 300, 0, 80)
+		}
+	)
+
+	-- Progress bar animation
+	local progressTween = TweenService:Create(
+		notification.ProgressBar,
+		TweenInfo.new(duration, Enum.EasingStyle.Linear),
+		{Size = UDim2.new(0, 0, 0, 4)}
+	)
+
+	local function hide()
+		local slideOut = TweenService:Create(
+			notification,
+			TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In),
+			{
+				Position = UDim2.new(1, 10, 1, -90),
+				Size = UDim2.new(0, 300, 0, 0)
+			}
+		)
+
+		slideOut:Play()
+		slideOut.Completed:Wait()
+
+		-- Return notification to the pool
+		notification.Visible = false
+		table.insert(notificationPool, notification)
+	end
+
+	slideIn:Play()
+	progressTween:Play()
+
+	task.wait(duration)
+	hide()
+end
+function ModernNotifications.Show(title, message, duration)
+	showNotification(title, message, duration or 5)
+end
+
+return ModernNotifications
